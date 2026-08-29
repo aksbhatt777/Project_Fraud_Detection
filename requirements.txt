@@ -1,0 +1,11 @@
+notebook==7.6.2
+ipykernel==7.3.0
+pandas==2.3.3
+numpy==2.2.6
+matplotlib==3.10.9
+seaborn==0.13.2
+scikit-learn
+lightgbm
+xgboost
+fastparquet
+tensorflow

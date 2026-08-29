@@ -1,0 +1,118 @@
+# ==============================================================================
+# Config for the Fraud Detection pipeline.
+# Every value here was taken directly from the source notebook / scripts.
+# Changing values here changes pipeline behavior WITHOUT touching code.
+# ==============================================================================
+
+data:
+  identity_path: "data/raw/train_identity.csv"
+  transaction_path: "data/raw/train_transaction.csv"
+  artifacts_dir: "artifacts"
+  # Intermediate / output artifact filenames (kept identical in spirit to the notebook)
+  clean_for_ml_parquet: "fraud_data_clean_forML.parquet"   # has NaN (fine for LGBM/XGB)
+  clean_no_nan_parquet: "fraud_data_clean.parquet"          # NaN-free (needed for NN)
+  clean_no_nan_csv: "fraud_data_clean.csv"
+
+cleaning:
+  # notebook cell 26 / 33 / 39
+  special_cols: ["TransactionID", "isFraud", "TransactionDT"]
+  drop_missing_pct_threshold: 99      # drop columns with >99% missing
+  flag_missing_pct_low: 80            # columns with 80-99% missing -> presence flag, then dropped
+  flag_missing_pct_high: 99
+  numeric_fill_value: -999            # regular numeric columns
+  categorical_fill_value: "unknown"   # categorical columns
+  v_col_fill_value: 0                 # V-columns (aggregate stats -> 0 = "no activity")
+
+feature_engineering:
+  # notebook cell 60 - fixed V-column groupings
+  v_groups:
+    V1_11:    [1, 11]
+    V12_34:   [12, 34]
+    V35_52:   [35, 52]
+    V53_74:   [53, 74]
+    V75_94:   [75, 94]
+    V95_137:  [95, 137]
+    V138_166: [138, 166]
+    V167_216: [167, 216]
+    V217_278: [217, 278]
+    V279_321: [279, 321]
+    V322_339: [322, 339]
+
+  # notebook cell 86 - frequency encoding
+  high_cardinality_freq_cols: ["card1", "addr1", "addr2", "P_emaildomain", "R_emaildomain"]
+
+  # notebook cell 122 - email domain grouping (Feature Engineering 2.0)
+  common_email_domains:
+    - "gmail.com"
+    - "yahoo.com"
+    - "hotmail.com"
+    - "outlook.com"
+    - "aol.com"
+    - "msn.com"
+    - "live.com"
+    - "ymail.com"
+    - "rocketmail.com"
+  suspicious_email_domains:
+    - "anonymous.com"
+    - "protonmail.com"
+
+split:
+  # notebook cell 100 - time-based split, NOT random
+  train_ratio: 0.8
+  sort_col: "TransactionDT"
+  target_col: "isFraud"
+  drop_cols_from_features: ["TransactionID", "isFraud", "TransactionDT"]
+
+model_trainer:
+  # train_ML.py - LightGBM + XGBoost only (Random Forest / Logistic Regression
+  # intentionally excluded: notebook's own comparison found them weaker and the
+  # final ensemble in the notebook only ever uses LightGBM + XGBoost)
+  random_state: 42
+  lightgbm:
+    objective: "binary"
+    metric: "auc"
+    n_estimators: 500
+    learning_rate: 0.05
+    num_leaves: 255
+    verbosity: -1
+  xgboost:
+    objective: "binary:logistic"
+    eval_metric: "auc"
+    n_estimators: 500
+    learning_rate: 0.05
+    max_depth: 8
+    verbosity: 0
+
+nn_trainer:
+  # train_NN.py - optional, kept separate since it needs TensorFlow and its
+  # predictions were not part of the notebook's final chosen ensemble
+  enabled: false
+  val_split_ratio: 0.85          # last 15% of train used for validation (time-based)
+  class_weight_cap: 10.0
+  clip_range: [-5, 5]
+  architecture:
+    dense_units: [128, 64, 32]
+    dropout: [0.4, 0.3, 0.2]
+    l2_reg: 0.001
+  optimizer:
+    learning_rate: 0.0001
+    clipnorm: 1.0
+  training:
+    epochs: 100
+    batch_size: 1024
+    early_stopping_patience: 10
+    monitor: "val_auc"
+
+ensemble:
+  # notebook cells 143-152 - weighted average was the best performer
+  lgb_weight: 0.75
+  xgb_weight: 0.25
+  weighted_search_range: [0.5, 0.85, 0.05]   # start, stop, step used in notebook's grid
+
+evaluation:
+  # notebook cell 163 - example chosen operating threshold
+  chosen_threshold: 0.40
+  threshold_scan: [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7]
+
+logging:
+  log_dir: "logs"

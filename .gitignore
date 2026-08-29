@@ -1,0 +1,23 @@
+# data
+data/raw/*.csv
+data/raw/*.parquet
+data/For_training/*.csv
+data/For_testing/*.csv
+
+# artifacts (models, predictions, comparisons)
+artifacts/*
+!artifacts/.gitkeep
+
+# logs
+logs/*
+!logs/.gitkeep
+
+# python
+__pycache__/
+*.pyc
+venv/
+*.egg-info/
+
+# NN (if you enable it later)
+*.keras
+
