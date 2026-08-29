@@ -28,7 +28,8 @@ logger = get_logger(__name__)
 
 @dataclass
 class ModelTrainerConfig:
-    artifacts_dir: str
+    models_dir: str
+    predictions_dir: str
     random_state: int = 42
     lightgbm_params: Dict[str, Any] = field(default_factory=dict)
     xgboost_params: Dict[str, Any] = field(default_factory=dict)
@@ -78,7 +79,7 @@ class ModelTrainer:
         auc = roc_auc_score(y_test, preds)
         logger.info(f"LightGBM AUC: {auc:.4f} | Time: {time.time() - start:.1f}s")
 
-        save_path = os.path.join(self.config.artifacts_dir, "best_lightgbm.pkl")
+        save_path = os.path.join(self.config.models_dir, "best_lightgbm.pkl")
         joblib.dump(model, save_path)
         logger.info(f"Saved LightGBM model to {save_path}")
 
@@ -103,7 +104,7 @@ class ModelTrainer:
         auc = roc_auc_score(y_test, preds)
         logger.info(f"XGBoost AUC: {auc:.4f} | Time: {time.time() - start:.1f}s")
 
-        save_path = os.path.join(self.config.artifacts_dir, "best_xgboost.pkl")
+        save_path = os.path.join(self.config.models_dir, "best_xgboost.pkl")
         joblib.dump(model, save_path)
         logger.info(f"Saved XGBoost model to {save_path}")
 
@@ -125,7 +126,8 @@ class ModelTrainer:
             - ml_model_test_predictions.csv
         """
         try:
-            os.makedirs(self.config.artifacts_dir, exist_ok=True)
+            os.makedirs(self.config.models_dir, exist_ok=True)
+            os.makedirs(self.config.predictions_dir, exist_ok=True)
 
             X_train_num, X_test_num = self._label_encode_categoricals(X_train, X_test)
 
@@ -149,13 +151,13 @@ class ModelTrainer:
 
             results_df = pd.DataFrame(list(results.items()), columns=["Model", "AUC"])
             results_df = results_df.sort_values("AUC", ascending=False)
-            results_path = os.path.join(self.config.artifacts_dir, "ml_model_comparison.csv")
+            results_path = os.path.join(self.config.predictions_dir, "ml_model_comparison.csv")
             results_df.to_csv(results_path, index=False)
 
             pred_df = pd.DataFrame({"TransactionID": test_transaction_ids.values})
             for name, pred in predictions.items():
                 pred_df[name + "_fraud_prob"] = pred
-            preds_path = os.path.join(self.config.artifacts_dir, "ml_model_test_predictions.csv")
+            preds_path = os.path.join(self.config.predictions_dir, "ml_model_test_predictions.csv")
             pred_df.to_csv(preds_path, index=False)
 
             logger.info(f"Saved comparison -> {results_path}, predictions -> {preds_path}")

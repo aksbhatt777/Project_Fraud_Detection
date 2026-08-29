@@ -31,7 +31,8 @@ logger = get_logger(__name__)
 
 @dataclass
 class NNTrainerConfig:
-    artifacts_dir: str
+    models_dir: str
+    predictions_dir: str
     val_split_ratio: float = 0.85
     class_weight_cap: float = 10.0
     clip_range: List[float] = field(default_factory=lambda: [-5, 5])
@@ -71,7 +72,8 @@ class NNTrainer:
         try:
             from tensorflow import keras  # lazy import - optional dependency
 
-            os.makedirs(self.config.artifacts_dir, exist_ok=True)
+            os.makedirs(self.config.models_dir, exist_ok=True)
+            os.makedirs(self.config.predictions_dir, exist_ok=True)
 
             X_train_full = X_train.copy()
             X_test = X_test.copy()
@@ -162,13 +164,13 @@ class NNTrainer:
             nn_auc = roc_auc_score(y_test, nn_pred)
             logger.info(f"Neural Network Test AUC: {nn_auc:.4f} | Time: {time.time() - start:.1f}s")
 
-            model_path = os.path.join(self.config.artifacts_dir, "best_neural_network.keras")
+            model_path = os.path.join(self.config.models_dir, "best_neural_network.keras")
             model.save(model_path)
 
             pred_df = pd.DataFrame(
                 {"TransactionID": test_transaction_ids.values, "NN_fraud_prob": nn_pred}
             )
-            preds_path = os.path.join(self.config.artifacts_dir, "nn_test_predictions.csv")
+            preds_path = os.path.join(self.config.predictions_dir, "nn_test_predictions.csv")
             pred_df.to_csv(preds_path, index=False)
 
             logger.info(f"Saved NN model -> {model_path}, predictions -> {preds_path}")

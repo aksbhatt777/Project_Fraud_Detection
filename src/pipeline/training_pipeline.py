@@ -35,7 +35,9 @@ logger = get_logger(__name__)
 class TrainingPipeline:
     def __init__(self, config_path: str = "config/config.yaml"):
         self.cfg = read_yaml(config_path)
-        self.artifacts_dir = self.cfg["data"]["artifacts_dir"]
+        self.models_dir = self.cfg["data"]["models_dir"]
+        self.predictions_dir = self.cfg["data"]["predictions_dir"]
+        self.data_dir = self.cfg["data"]["data_dir"]
 
     def run(self) -> dict:
         try:
@@ -77,7 +79,7 @@ class TrainingPipeline:
 
             # 5. Persistence --------------------------------------------------
             persistence = DataPersistence(
-                artifacts_dir=self.artifacts_dir,
+                data_dir=self.data_dir,
                 for_ml_filename=self.cfg["data"]["clean_for_ml_parquet"],
                 no_nan_parquet_filename=self.cfg["data"]["clean_no_nan_parquet"],
                 no_nan_csv_filename=self.cfg["data"]["clean_no_nan_csv"],
@@ -98,7 +100,8 @@ class TrainingPipeline:
             # 7. Model training (LightGBM + XGBoost) --------------------------
             trainer = ModelTrainer(
                 ModelTrainerConfig(
-                    artifacts_dir=self.artifacts_dir,
+                    models_dir=self.models_dir,
+                    predictions_dir=self.predictions_dir,
                     random_state=self.cfg["model_trainer"]["random_state"],
                     lightgbm_params=self.cfg["model_trainer"]["lightgbm"],
                     xgboost_params=self.cfg["model_trainer"]["xgboost"],
@@ -131,7 +134,8 @@ class TrainingPipeline:
                 nn_cfg = self.cfg["nn_trainer"]
                 nn_trainer = NNTrainer(
                     NNTrainerConfig(
-                        artifacts_dir=self.artifacts_dir,
+                        models_dir=self.models_dir,
+                        predictions_dir=self.predictions_dir,
                         val_split_ratio=nn_cfg["val_split_ratio"],
                         class_weight_cap=nn_cfg["class_weight_cap"],
                         clip_range=nn_cfg["clip_range"],
@@ -153,7 +157,7 @@ class TrainingPipeline:
             # 9. Ensemble (LightGBM + XGBoost) ---------------------------------
             ensemble = Ensemble(
                 EnsembleConfig(
-                    artifacts_dir=self.artifacts_dir,
+                    predictions_dir=self.predictions_dir,
                     lgb_weight=self.cfg["ensemble"]["lgb_weight"],
                     xgb_weight=self.cfg["ensemble"]["xgb_weight"],
                     weighted_search_start=self.cfg["ensemble"]["weighted_search_range"][0],
@@ -171,7 +175,7 @@ class TrainingPipeline:
             # 10. Evaluation ----------------------------------------------------
             evaluator = ModelEvaluation(
                 ModelEvaluationConfig(
-                    artifacts_dir=self.artifacts_dir,
+                    predictions_dir=self.predictions_dir,
                     chosen_threshold=self.cfg["evaluation"]["chosen_threshold"],
                     threshold_scan=self.cfg["evaluation"]["threshold_scan"],
                 )

@@ -34,7 +34,7 @@ logger = get_logger(__name__)
 
 @dataclass
 class ModelEvaluationConfig:
-    artifacts_dir: str
+    predictions_dir: str
     chosen_threshold: float = 0.40
     threshold_scan: List[float] = field(default_factory=lambda: [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7])
 
@@ -105,7 +105,7 @@ class ModelEvaluation:
     ) -> str:
         """notebook cell 163 - predictions at the chosen operating threshold."""
         try:
-            os.makedirs(self.config.artifacts_dir, exist_ok=True)
+            os.makedirs(self.config.predictions_dir, exist_ok=True)
             y_pred_final = (final_pred >= self.config.chosen_threshold).astype(int)
 
             final_submission = pd.DataFrame(
@@ -115,7 +115,7 @@ class ModelEvaluation:
                     "predicted_fraud": y_pred_final,
                 }
             )
-            path = os.path.join(self.config.artifacts_dir, "final_predictions_with_threshold.csv")
+            path = os.path.join(self.config.predictions_dir, "final_predictions_with_threshold.csv")
             final_submission.to_csv(path, index=False)
 
             logger.info(

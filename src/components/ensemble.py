@@ -26,7 +26,7 @@ logger = get_logger(__name__)
 
 @dataclass
 class EnsembleConfig:
-    artifacts_dir: str
+    predictions_dir: str
     lgb_weight: float = 0.75
     xgb_weight: float = 0.25
     weighted_search_start: float = 0.5
@@ -98,7 +98,7 @@ class Ensemble:
         and persist predictions + ensemble metadata.
         """
         try:
-            os.makedirs(self.config.artifacts_dir, exist_ok=True)
+            os.makedirs(self.config.predictions_dir, exist_ok=True)
 
             final_pred = self.config.lgb_weight * lgb_pred + self.config.xgb_weight * xgb_pred
             auc = roc_auc_score(y_test, final_pred)
@@ -107,7 +107,7 @@ class Ensemble:
             final_predictions = pd.DataFrame(
                 {"TransactionID": test_transaction_ids.values, "isFraud": final_pred}
             )
-            preds_path = os.path.join(self.config.artifacts_dir, "final_predictions.csv")
+            preds_path = os.path.join(self.config.predictions_dir, "final_predictions.csv")
             final_predictions.to_csv(preds_path, index=False)
 
             import joblib
@@ -117,7 +117,7 @@ class Ensemble:
                 "XGBoost_weight": self.config.xgb_weight,
                 "Test_AUC": auc,
             }
-            info_path = os.path.join(self.config.artifacts_dir, "ensemble_info.pkl")
+            info_path = os.path.join(self.config.predictions_dir, "ensemble_info.pkl")
             joblib.dump(ensemble_info, info_path)
 
             logger.info(f"Saved final predictions -> {preds_path}, ensemble info -> {info_path}")

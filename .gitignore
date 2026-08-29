@@ -1,23 +1,39 @@
-# data
-data/raw/*.csv
-data/raw/*.parquet
-data/For_training/*.csv
-data/For_testing/*.csv
 
-# artifacts (models, predictions, comparisons)
-artifacts/*
+# Data files
+data/
+*.csv
+*.zip
+*.parquet
+
+# Model files
+*.pkl
+*.h5
+*.keras
+
+# Predictions
+*_predictions.csv
+ensemble_*.pkl
+final_*.csv
+
+# Notebooks
+.ipynb_checkpoints/
+
+# Logs
+logs/
+
+# Artifacts
+artifacts/
 !artifacts/.gitkeep
 
-# logs
-logs/*
-!logs/.gitkeep
-
-# python
+# Python
 __pycache__/
 *.pyc
 venv/
 *.egg-info/
 
-# NN (if you enable it later)
-*.keras
+# Large files
+*.zip
+*.csv
+*.pkl
+*.h5
 

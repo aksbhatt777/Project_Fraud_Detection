@@ -7,7 +7,15 @@
 data:
   identity_path: "data/raw/train_identity.csv"
   transaction_path: "data/raw/train_transaction.csv"
-  artifacts_dir: "artifacts"
+
+  # Artifacts are split by kind so you can .gitignore predictions/logs while
+  # still tracking (or backing up) trained models separately, cache the
+  # expensive engineered dataset, etc.
+  artifacts_dir: "artifacts"          # kept for backward compatibility / reference
+  models_dir: "artifacts/models"       # best_lightgbm.pkl, best_xgboost.pkl, best_neural_network.keras
+  predictions_dir: "artifacts/predictions"  # *_predictions.csv, *_comparison.csv, ensemble_info.pkl
+  data_dir: "artifacts/data"           # engineered parquet/csv datasets
+
   # Intermediate / output artifact filenames (kept identical in spirit to the notebook)
   clean_for_ml_parquet: "fraud_data_clean_forML.parquet"   # has NaN (fine for LGBM/XGB)
   clean_no_nan_parquet: "fraud_data_clean.parquet"          # NaN-free (needed for NN)
