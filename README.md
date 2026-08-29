@@ -85,9 +85,3 @@ made when going from notebook → modules, per your instructions:
 - **Scope = training pipeline only** (per your answer): no inference/serving
   layer yet. That's a clean follow-on once you're ready to extend to (b)/(c).
 
-## Extending later
-
-- **Batch inference**: reuse `data_cleaning.py` + `feature_engineering.py`
-  (same transforms) + `model_trainer`'s saved `.pkl` files in a new
-  `prediction_pipeline.py`.
-- **API**: wrap the same prediction pipeline in FastAPI once you're ready.
