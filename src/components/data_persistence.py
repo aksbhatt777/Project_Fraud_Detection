@@ -21,18 +21,18 @@ logger = get_logger(__name__)
 
 
 class DataPersistence:
-    def __init__(self, artifacts_dir: str, for_ml_filename: str, no_nan_parquet_filename: str, no_nan_csv_filename: str):
-        self.artifacts_dir = artifacts_dir
+    def __init__(self, data_dir: str, for_ml_filename: str, no_nan_parquet_filename: str, no_nan_csv_filename: str):
+        self.data_dir = data_dir
         self.for_ml_filename = for_ml_filename
         self.no_nan_parquet_filename = no_nan_parquet_filename
         self.no_nan_csv_filename = no_nan_csv_filename
 
     def save(self, df_fe: pd.DataFrame) -> dict:
         try:
-            os.makedirs(self.artifacts_dir, exist_ok=True)
+            os.makedirs(self.data_dir, exist_ok=True)
 
             # 1. Save the ML-ready version (NaN allowed) - notebook cell 129
-            ml_path = os.path.join(self.artifacts_dir, self.for_ml_filename)
+            ml_path = os.path.join(self.data_dir, self.for_ml_filename)
             df_fe.to_parquet(ml_path, index=False)
             logger.info(f"Saved ML-ready data (NaN allowed): {df_fe.shape} -> {ml_path}")
 
@@ -44,11 +44,11 @@ class DataPersistence:
             if "card_amt_std" in df_clean.columns:
                 df_clean["card_amt_std"] = df_clean["card_amt_std"].fillna(0)
 
-            nn_parquet_path = os.path.join(self.artifacts_dir, self.no_nan_parquet_filename)
+            nn_parquet_path = os.path.join(self.data_dir, self.no_nan_parquet_filename)
             df_clean.to_parquet(nn_parquet_path, index=False)
             logger.info(f"Saved NN-ready data (parquet, NaN-free): {df_clean.shape} -> {nn_parquet_path}")
 
-            nn_csv_path = os.path.join(self.artifacts_dir, self.no_nan_csv_filename)
+            nn_csv_path = os.path.join(self.data_dir, self.no_nan_csv_filename)
             df_clean.to_csv(nn_csv_path, index=False)
             logger.info(f"Saved NN-ready data (csv, NaN-free): {df_clean.shape} -> {nn_csv_path}")
 
